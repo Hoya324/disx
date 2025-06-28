@@ -4,17 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import io.lettuce.core.event.EventBus
-import org.redisson.Redisson
-import org.redisson.api.RedissonClient
-import org.redisson.config.Config
-import org.springframework.amqp.core.AmqpAdmin
-import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
-import org.springframework.amqp.support.converter.MessageConverter
+import org.apache.kafka.clients.admin.AdminClientConfig
+import org.apache.kafka.clients.admin.NewTopic
+import org.apache.kafka.clients.producer.ProducerConfig
+import org.apache.kafka.common.serialization.StringSerializer
+import org.sandbox.disx.core.events.EventBus
+import org.sandbox.disx.infrastructure.kafka.KafkaEventBus
+import org.sandbox.disx.outbox.OutboxEventPublisher
+import org.sandbox.disx.outbox.OutboxKafkaPublisher
+import org.sandbox.disx.outbox.OutboxRepository
+import org.sandbox.disx.outbox.OutboxService
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -23,12 +22,17 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.EnableAspectJAutoProxy
+import org.springframework.kafka.config.TopicBuilder
+import org.springframework.kafka.core.DefaultKafkaProducerFactory
+import org.springframework.kafka.core.KafkaAdmin
+import org.springframework.kafka.core.KafkaTemplate
+import org.springframework.kafka.core.ProducerFactory
 import org.springframework.scheduling.annotation.EnableScheduling
 
 @Configuration
 @ConditionalOnProperty(
     prefix = "disx",
-    name = ["enable"],
+    name = ["enabled"],
     havingValue = "true",
     matchIfMissing = true
 )
@@ -49,84 +53,80 @@ class DisxAutoConfiguration(
         }
     }
 
-    // RabbitMQ 구성
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(name = ["org.springframework.amqp.rabbit.core.RabbitTemplate"])
-    fun connectionFactory(): CachingConnectionFactory {
-        return CachingConnectionFactory().apply {
-            this.setHost(properties.rabbitmq.host)
-            this.setPassword(properties.rabbitmq.password)
-            this.port = properties.rabbitmq.port
-            this.username = properties.rabbitmq.username
-        }
+    @ConditionalOnClass(name = ["org.springframework.kafka.core.KafkaTemplate"])
+    fun kafkaAdmin(): KafkaAdmin {
+        val configs = mutableMapOf<String, Any>()
+        configs[AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG] = properties.kafka.bootstrapServers
+        return KafkaAdmin(configs)
     }
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(name = ["org.springframework.amqp.rabbit.core.RabbitTemplate"])
-    fun messageConverter(objectMapper: ObjectMapper): MessageConverter {
-        return Jackson2JsonMessageConverter(objectMapper)
+    @ConditionalOnClass(name = ["org.springframework.kafka.core.KafkaTemplate"])
+    fun producerFactory(): ProducerFactory<String, String> {
+        val configs = mutableMapOf<String, Any>()
+        configs[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = properties.kafka.bootstrapServers
+        configs[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
+        configs[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
+        configs[ProducerConfig.ACKS_CONFIG] = "all"
+        configs[ProducerConfig.RETRIES_CONFIG] = 3
+        configs[ProducerConfig.BATCH_SIZE_CONFIG] = 16384
+        configs[ProducerConfig.LINGER_MS_CONFIG] = 10
+        configs[ProducerConfig.BUFFER_MEMORY_CONFIG] = 33554432
+        configs[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] = true
+
+        return DefaultKafkaProducerFactory(configs)
     }
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(name = ["org.springframework.amqp.rabbit.core.RabbitTemplate"])
-    fun rabbitTemplate(
-        connectionFactory: ConnectionFactory,
-        messageConverter: MessageConverter
-    ): RabbitTemplate {
-        return RabbitTemplate(connectionFactory).apply {
-            this.messageConverter = messageConverter
-        }
+    @ConditionalOnClass(name = ["org.springframework.kafka.core.KafkaTemplate"])
+    fun kafkaTemplate(producerFactory: ProducerFactory<String, String>): KafkaTemplate<String, String> {
+        return KafkaTemplate(producerFactory)
     }
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(name = ["org.springframework.amqp.rabbit.core.RabbitTemplate"])
-    fun amqpAdmin(connectionFactory: ConnectionFactory): AmqpAdmin {
-        return RabbitAdmin(connectionFactory)
+    @ConditionalOnClass(name = ["org.springframework.kafka.core.KafkaTemplate"])
+    fun eventBus(): EventBus {
+        return KafkaEventBus()
+    }
+
+    // Kafka Topics
+    @Bean
+    fun disxEventsTopic(): NewTopic {
+        return TopicBuilder.name("disx-events")
+            .partitions(properties.kafka.partitions)
+            .replicas(properties.kafka.replicas)
+            .build()
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnClass(name = ["org.springframework.amqp.rabbit.core.RabbitTemplate"])
-    fun eventBus(
-        rabbitTemplate: RabbitTemplate,
-        amqpAdmin: AmqpAdmin
-    ): EventBus {
-        return RabbitMQEventBus(rabbitTemplate, amqpAdmin)
-    }
-
-    // Redis 구성
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnClass(name = ["org.redisson.api.RedissonClient"])
-    fun redissonClient(): RedissonClient {
-        val config = Config()
-        config.useSingleServer()
-            .setAddress("redis://${properties.redis.host}:${properties.redis.port}")
-            .setPassword(properties.redis.password.takeIf { it.isNotBlank() })
-            .setDatabase(properties.redis.database)
-
-        return Redisson.create(config)
+    fun orderEventsTopic(): NewTopic {
+        return TopicBuilder.name("order-events")
+            .partitions(properties.kafka.partitions)
+            .replicas(properties.kafka.replicas)
+            .build()
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnClass(name = ["org.redisson.api.RedissonClient"])
-    fun lockManager(redissonClient: RedissonClient): LockManager {
-        return LockManager(redissonClient)
+    fun paymentEventsTopic(): NewTopic {
+        return TopicBuilder.name("payment-events")
+            .partitions(properties.kafka.partitions)
+            .replicas(properties.kafka.replicas)
+            .build()
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnClass(name = ["org.redisson.api.RedissonClient"])
-    fun distributedLockAspect(lockManager: LockManager): DistributedLockAspect {
-        return DistributedLockAspect(lockManager)
+    fun inventoryEventsTopic(): NewTopic {
+        return TopicBuilder.name("inventory-events")
+            .partitions(properties.kafka.partitions)
+            .replicas(properties.kafka.replicas)
+            .build()
     }
 
-    // Outbox 구성
     @Bean
     @ConditionalOnMissingBean
     fun outboxService(
@@ -145,7 +145,11 @@ class DisxAutoConfiguration(
 
     @Bean
     @ConditionalOnMissingBean
-    fun outboxProcessor(outboxService: OutboxService): OutboxProcessor {
-        return OutboxProcessor(outboxService)
+    fun outboxKafkaPublisher(
+        outboxRepository: OutboxRepository,
+        kafkaTemplate: KafkaTemplate<String, String>,
+        objectMapper: ObjectMapper
+    ): OutboxKafkaPublisher {
+        return OutboxKafkaPublisher(outboxRepository, kafkaTemplate, objectMapper)
     }
 }

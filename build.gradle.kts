@@ -3,13 +3,14 @@ plugins {
     kotlin("plugin.spring") version "1.9.21"
     id("org.springframework.boot") version "3.2.0"
     id("io.spring.dependency-management") version "1.1.4"
-    `maven-publish`
-    signing
-    `java-library`
+    id("org.sonarqube") version "4.4.1.3373"
+    id("maven-publish")
+    id("signing")
+    id("java-library")
 }
 
-group = "io.github.disx"
-version = "1.0.0"
+group = property("group") as String
+version = property("version") as String
 java.sourceCompatibility = JavaVersion.VERSION_17
 
 repositories {
@@ -21,12 +22,8 @@ dependencies {
     api("org.springframework.boot:spring-boot-starter")
     api("org.springframework.boot:spring-boot-starter-aop")
 
-    // Event Bus - RabbitMQ
-    api("org.springframework.boot:spring-boot-starter-amqp")
-
-    // Distributed Lock - Redis
-    api("org.springframework.boot:spring-boot-starter-data-redis")
-    api("org.redisson:redisson-spring-boot-starter:3.24.3")
+    // Event Bus - Kafka
+    api("org.springframework.kafka:spring-kafka")
 
     // Kotlin Support
     api("org.jetbrains.kotlin:kotlin-reflect")
@@ -42,7 +39,7 @@ dependencies {
 
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("io.mockk:mockk:${property("mockkVersion")}")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 }
 
@@ -57,6 +54,28 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
+// SonarCloud 설정
+sonar {
+    properties {
+        property("sonar.projectKey", property("sonarProjectKey") as String)
+        property("sonar.organization", property("sonarOrganization") as String)
+        property("sonar.host.url", property("sonarHostUrl") as String)
+        property("sonar.sources", "src/main")
+        property("sonar.tests", "src/test")
+        property("sonar.language", "kotlin")
+        property("sonar.sourceEncoding", "UTF-8")
+
+        // 컴파일 스킵 설정 (deprecated 경고 해결)
+        property("sonar.gradle.skipCompile", "true")
+
+        // 코드 커버리지 설정
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
+
+        // 제외할 파일들 (필요에 따라 수정)
+        property("sonar.coverage.exclusions", "**/*Config.kt,**/*Application.kt")
+    }
+}
+
 // Maven Central 배포 설정
 publishing {
     publications {
@@ -64,29 +83,29 @@ publishing {
             from(components["java"])
 
             pom {
-                name.set("Disx - Distributed Event Framework")
-                description.set("A lightweight Kotlin-first distributed event framework with Outbox pattern and distributed locks")
-                url.set("https://github.com/Hoya324/disx") // TODO: 설정
+                name.set(property("projectName") as String)
+                description.set(property("projectDescription") as String)
+                url.set(property("projectUrl") as String)
 
                 licenses {
                     license {
-                        name.set("Apache License 2.0")
-                        url.set("https://www.apache.org/licenses/LICENSE-2.0")
+                        name.set(property("licenseName") as String)
+                        url.set(property("licenseUrl") as String)
                     }
                 }
 
                 developers {
-                    developer {// TODO: 설정
-                        id.set("disx")
-                        name.set("Disx")
-                        email.set("disx0626@gmail.com")
+                    developer {
+                        id.set(property("developerId") as String)
+                        name.set(property("developerName") as String)
+                        email.set(property("developerEmail") as String)
                     }
                 }
 
                 scm {
-                    connection.set("scm:git:git://github.com/Hoya324/disx.git") // TODO: 설정
-                    developerConnection.set("scm:git:ssh://github.com/Hoya324/disx.git") // TODO: 설정
-                    url.set("https://github.com/Hoya324/disx")// TODO: 설정
+                    connection.set(property("scmConnection") as String)
+                    developerConnection.set(property("scmDeveloperConnection") as String)
+                    url.set(property("scmUrl") as String)
                 }
             }
         }

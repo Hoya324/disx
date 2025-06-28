@@ -5,26 +5,20 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "disx")
 data class DisxProperties(
     val enabled: Boolean = true,
-    val rabbitmq: RabbitMQProperties = RabbitMQProperties(),
-    val redis: RedisProperties = RedisProperties(),
+    val kafka: KafkaProperties = KafkaProperties(),
     val outbox: OutboxProperties = OutboxProperties()
 ) {
-    data class RabbitMQProperties(
-        val host: String = "localhost",
-        val port: Int = 5672,
-        val username: String = "guest",
-        val password: String = "guest"
-    )
 
-    data class RedisProperties(
-        val host: String = "localhost",
-        val port: Int = 6379,
-        val password: String = "",
-        val database: Int = 0
+    data class KafkaProperties(
+        val bootstrapServers: String = "localhost:9092",
+        val partitions: Int = 3,
+        val replicas: Int = 1
     )
 
     data class OutboxProperties(
-        val enabled: Boolean = true
+        val enabled: Boolean = true,
+        val pollingInterval: Long = 1000,
+        val batchSize: Int = 100
     )
 }
 
