@@ -21,7 +21,7 @@ abstract class BaseDomainEvent(
 
     fun getMetadata(key: String): Any? = _metadata[key]
 
-    private inline fun <reified T> getMetadata(key: String): T? = _metadata[key] as? T
+    private inline fun <reified T> getMetadataAs(key: String): T? = _metadata[key] as? T
 
     fun setCorrelationId(correlationId: String): BaseDomainEvent {
         return addMetadata("correlationId", correlationId)

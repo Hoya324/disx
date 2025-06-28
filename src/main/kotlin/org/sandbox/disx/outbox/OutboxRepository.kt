@@ -1,8 +1,5 @@
 package org.sandbox.disx.outbox
 
-import org.springframework.stereotype.Component
-
-@Component
 interface OutboxRepository {
 
     /**
