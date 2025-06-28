@@ -74,7 +74,7 @@ sonar {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            artifactId = "disx"
+            artifactId = "disx" // This is already correctly set
 
             from(components["java"])
 
