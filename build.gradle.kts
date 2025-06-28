@@ -68,6 +68,8 @@ sonar {
 publishing {
     publications {
         create<MavenPublication>("maven") {
+            artifactId = "disx"
+
             from(components["java"])
 
             pom {
