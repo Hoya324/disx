@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-io.github.disx.config.DisxAutoConfiguration
+org.sandbox.disx.config.DisxAutoConfiguration
