@@ -1,0 +1,10 @@
+jdk:
+  - openjdk17
+
+install:
+  - export JAVA_HOME=$JITCI_JAVA_HOME
+  - export PATH=$JAVA_HOME/bin:$PATH
+  - java -version
+
+script:
+  - ./gradlew clean build
