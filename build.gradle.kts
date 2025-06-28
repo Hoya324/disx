@@ -57,22 +57,10 @@ tasks.withType<Test> {
 // SonarCloud 설정
 sonar {
     properties {
-        property("sonar.projectKey", property("sonarProjectKey") as String)
-        property("sonar.organization", property("sonarOrganization") as String)
-        property("sonar.host.url", property("sonarHostUrl") as String)
-        property("sonar.sources", "src/main")
-        property("sonar.tests", "src/test")
-        property("sonar.language", "kotlin")
-        property("sonar.sourceEncoding", "UTF-8")
-
-        // 컴파일 스킵 설정 (deprecated 경고 해결)
+        property("sonar.projectKey", "Hoya324_disx")
+        property("sonar.organization", "disxhoya324")
+        property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.gradle.skipCompile", "true")
-
-        // 코드 커버리지 설정
-        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
-
-        // 제외할 파일들 (필요에 따라 수정)
-        property("sonar.coverage.exclusions", "**/*Config.kt,**/*Application.kt")
     }
 }
 
