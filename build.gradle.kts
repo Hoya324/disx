@@ -60,6 +60,16 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
+// JitPack을 위한 JAR 태스크 설정 (bootJar 비활성화)
+tasks.jar {
+    enabled = true
+    archiveClassifier = ""
+}
+
+tasks.bootJar {
+    enabled = false
+}
+
 // SonarCloud 설정
 sonar {
     properties {
