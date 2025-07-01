@@ -3,14 +3,14 @@ package org.sandbox.disx.core.events
 interface EventHandler<T : BaseDomainEvent> {
 
     /**
-     * 이벤트를 처리합니다.
+     * Process the event.
      *
-     * @param event 처리할 이벤트
+     * @param event Event to process
      */
     suspend fun handle(event: T)
 
     /**
-     * 이 핸들러가 처리할 수 있는 이벤트 타입을 반환합니다.
+     * Returns the event type this handler can process.
      */
     fun getEventType(): Class<T>
 }

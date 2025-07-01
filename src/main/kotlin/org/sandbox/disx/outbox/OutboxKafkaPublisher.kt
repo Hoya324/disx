@@ -81,7 +81,7 @@ class OutboxKafkaPublisher(
         }
     }
 
-    // TODO: 동적으로 수정
+    // TODO: Make this configurable dynamically
     private fun determineTopicFromEventType(eventType: String): String {
         return when {
             eventType.contains("Order", ignoreCase = true) -> "order-events"
