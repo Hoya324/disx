@@ -1,27 +1,27 @@
 package org.sandbox.disx.core.events
 
 /**
- * 이벤트 버스 인터페이스
+ * Event bus interface
  */
 interface EventBus {
     
     /**
-     * 이벤트를 동기적으로 발행합니다.
+     * Publishes an event synchronously.
      */
     fun <T : BaseDomainEvent> publish(event: T)
     
     /**
-     * 이벤트를 비동기적으로 발행합니다.
+     * Publishes an event asynchronously.
      */
     suspend fun <T : BaseDomainEvent> publishAsync(event: T)
     
     /**
-     * 여러 이벤트를 동기적으로 배치 발행합니다.
+     * Publishes multiple events synchronously in batch.
      */
     fun <T : BaseDomainEvent> publishBatch(events: List<T>)
     
     /**
-     * 여러 이벤트를 비동기적으로 배치 발행합니다.
+     * Publishes multiple events asynchronously in batch.
      */
     suspend fun <T : BaseDomainEvent> publishBatchAsync(events: List<T>)
 }

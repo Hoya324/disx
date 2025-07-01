@@ -11,19 +11,19 @@ abstract class BaseDomainEvent(
 ) {
 
     /**
-     * 이벤트 타입을 반환합니다.
+     * Returns the event type.
      */
     fun getEventType(): String = this::class.simpleName ?: "UnknownEvent"
 
     /**
-     * 이벤트를 문자열로 표현합니다.
+     * Returns a string representation of the event.
      */
     override fun toString(): String {
         return "${getEventType()}(aggregateId=$aggregateId, eventId=$eventId, occurredAt=$occurredAt)"
     }
 
     /**
-     * 이벤트의 동등성을 확인합니다.
+     * Checks the equality of events.
      */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -32,7 +32,7 @@ abstract class BaseDomainEvent(
     }
 
     /**
-     * 이벤트의 해시 코드를 반환합니다.
+     * Returns the hash code of the event.
      */
     override fun hashCode(): Int {
         return eventId.hashCode()

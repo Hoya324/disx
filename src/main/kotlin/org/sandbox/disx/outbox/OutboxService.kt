@@ -19,7 +19,7 @@ class OutboxService(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     /**
-     * 도메인 이벤트를 Outbox에 저장
+     * Save domain event to Outbox
      */
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     fun handleDomainEvent(event: BaseDomainEvent) {

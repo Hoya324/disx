@@ -19,12 +19,12 @@ class OutboxEventPublisher(
         val event = joinPoint.args[0] as? BaseDomainEvent
 
         if (event != null && isTransactionActive()) {
-            // 스프링 이벤트로 발행
+            // Publish as Spring event
             applicationContext.publishEvent(event)
             return null
         }
 
-        // 트랜잭션이 없으면 그대로 발행
+        // If no transaction, publish as is
         return joinPoint.proceed()
     }
 
