@@ -1,5 +1,8 @@
 package org.sandbox.disx.core.event
 
+/**
+ * Event handler interface
+ */
 interface EventHandler<T : BaseDomainEvent> {
 
     /**
