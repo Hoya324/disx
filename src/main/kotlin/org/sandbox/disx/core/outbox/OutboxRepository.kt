@@ -1,4 +1,4 @@
-package org.sandbox.disx.outbox
+package org.sandbox.disx.core.outbox
 
 interface OutboxRepository {
 

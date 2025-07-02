@@ -1,4 +1,4 @@
-package org.sandbox.disx.outbox
+package org.sandbox.disx.core.outbox
 
 enum class OutboxStatus {
     PENDING,

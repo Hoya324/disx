@@ -1,4 +1,4 @@
-package org.sandbox.disx.core.events
+package org.sandbox.disx.core.event
 
 interface EventHandler<T : BaseDomainEvent> {
 

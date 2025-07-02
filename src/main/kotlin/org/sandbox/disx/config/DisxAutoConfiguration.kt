@@ -8,12 +8,12 @@ import org.apache.kafka.clients.admin.AdminClientConfig
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
-import org.sandbox.disx.core.events.EventBus
+import org.sandbox.disx.core.event.EventBus
+import org.sandbox.disx.core.outbox.OutboxEventPublisher
+import org.sandbox.disx.core.outbox.OutboxKafkaPublisher
+import org.sandbox.disx.core.outbox.OutboxRepository
+import org.sandbox.disx.core.outbox.OutboxService
 import org.sandbox.disx.infrastructure.kafka.KafkaEventBus
-import org.sandbox.disx.outbox.OutboxEventPublisher
-import org.sandbox.disx.outbox.OutboxKafkaPublisher
-import org.sandbox.disx.outbox.OutboxRepository
-import org.sandbox.disx.outbox.OutboxService
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty

@@ -1,4 +1,4 @@
-package org.sandbox.disx.core.events
+package org.sandbox.disx.core.event
 
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -85,7 +85,7 @@ class EventHandlerTest {
     @Test
     fun `동일한 핸들러로 다른 이벤트 처리 테스트`() = runBlocking {
         val handler = CountingEventHandler()
-        
+
         val event1 = TestEvent("aggregate-1", "data-1")
         val event2 = TestEvent("aggregate-2", "data-2")
         val event3 = TestEvent("aggregate-3", "data-3")

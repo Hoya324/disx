@@ -1,7 +1,7 @@
-package org.sandbox.disx.outbox
+package org.sandbox.disx.core.outbox
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.sandbox.disx.core.events.BaseDomainEvent
+import org.sandbox.disx.core.event.BaseDomainEvent
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.stereotype.Service

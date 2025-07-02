@@ -1,7 +1,7 @@
 package org.sandbox.disx.infrastructure.kafka
 
-import org.sandbox.disx.core.events.BaseDomainEvent
-import org.sandbox.disx.core.events.EventBus
+import org.sandbox.disx.core.event.BaseDomainEvent
+import org.sandbox.disx.core.event.EventBus
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 

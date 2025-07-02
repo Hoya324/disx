@@ -1,9 +1,9 @@
-package org.sandbox.disx.outbox
+package org.sandbox.disx.core.outbox
 
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
-import org.sandbox.disx.core.events.BaseDomainEvent
+import org.sandbox.disx.core.event.BaseDomainEvent
 import org.springframework.context.ApplicationContext
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionSynchronizationManager
@@ -14,7 +14,7 @@ class OutboxEventPublisher(
     private val applicationContext: ApplicationContext
 ) {
 
-    @Around("execution(* org.sandbox.disx.core.events.EventBus.publish*(..))")
+    @Around("execution(* org.sandbox.disx.core.event.EventBus.publish*(..))")
     fun interceptPublish(joinPoint: ProceedingJoinPoint): Any? {
         val event = joinPoint.args[0] as? BaseDomainEvent
 

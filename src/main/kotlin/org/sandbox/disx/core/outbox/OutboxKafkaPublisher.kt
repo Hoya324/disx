@@ -1,4 +1,4 @@
-package org.sandbox.disx.outbox
+package org.sandbox.disx.core.outbox
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.producer.ProducerRecord

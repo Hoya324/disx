@@ -1,4 +1,4 @@
-package org.sandbox.disx.core.events
+package org.sandbox.disx.core.event
 
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -19,18 +19,19 @@ class EventBusSimpleTest {
 
     private class TestEventHandler : EventHandler<TestEvent> {
         val processedCount = AtomicLong(0)
-        
+
         override suspend fun handle(event: TestEvent) {
             processedCount.incrementAndGet()
         }
-        
+
         override fun getEventType(): Class<TestEvent> = TestEvent::class.java
     }
 
     // 테스트용 간단한 EventBus 구현체
     private class TestEventBusImpl : EventBus {
-        private val handlers = mutableMapOf<Class<out BaseDomainEvent>, MutableList<EventHandler<out BaseDomainEvent>>>()
-        
+        private val handlers =
+            mutableMapOf<Class<out BaseDomainEvent>, MutableList<EventHandler<out BaseDomainEvent>>>()
+
         override fun <T : BaseDomainEvent> publish(event: T) {
             runBlocking {
                 getHandlersForEvent(event::class.java).forEach { handler ->
@@ -39,29 +40,29 @@ class EventBusSimpleTest {
                 }
             }
         }
-        
+
         override suspend fun <T : BaseDomainEvent> publishAsync(event: T) {
             getHandlersForEvent(event::class.java).forEach { handler ->
                 @Suppress("UNCHECKED_CAST")
                 (handler as EventHandler<BaseDomainEvent>).handle(event)
             }
         }
-        
+
         override fun <T : BaseDomainEvent> publishBatch(events: List<T>) {
             runBlocking {
                 events.forEach { publishAsync(it) }
             }
         }
-        
+
         override suspend fun <T : BaseDomainEvent> publishBatchAsync(events: List<T>) {
             events.forEach { publishAsync(it) }
         }
-        
+
         fun <T : BaseDomainEvent> registerHandler(eventType: Class<T>, handler: EventHandler<T>) {
             handlers.computeIfAbsent(eventType) { mutableListOf() }
                 .add(handler as EventHandler<out BaseDomainEvent>)
         }
-        
+
         private fun getHandlersForEvent(eventType: Class<out BaseDomainEvent>): List<EventHandler<out BaseDomainEvent>> {
             return handlers[eventType] ?: emptyList()
         }
@@ -72,10 +73,10 @@ class EventBusSimpleTest {
         val eventBus = TestEventBusImpl()
         val handler = TestEventHandler()
         eventBus.registerHandler(TestEvent::class.java, handler)
-        
+
         val event = TestEvent("test-aggregate")
         eventBus.publish(event)
-        
+
         assertEquals(1, handler.processedCount.get())
     }
 
@@ -84,15 +85,15 @@ class EventBusSimpleTest {
         val eventBus = TestEventBusImpl()
         val handler = TestEventHandler()
         eventBus.registerHandler(TestEvent::class.java, handler)
-        
+
         val events = listOf(
             TestEvent("aggregate-1"),
             TestEvent("aggregate-2"),
             TestEvent("aggregate-3")
         )
-        
+
         eventBus.publishBatch(events)
-        
+
         assertEquals(3, handler.processedCount.get())
     }
 
@@ -101,10 +102,10 @@ class EventBusSimpleTest {
         val eventBus = TestEventBusImpl()
         val handler = TestEventHandler()
         eventBus.registerHandler(TestEvent::class.java, handler)
-        
+
         val event = TestEvent("test-aggregate")
         eventBus.publishAsync(event)
-        
+
         assertEquals(1, handler.processedCount.get())
     }
 
@@ -112,7 +113,7 @@ class EventBusSimpleTest {
     fun `핸들러가 없는 이벤트 발행 테스트`() {
         val eventBus = TestEventBusImpl()
         val event = TestEvent("test-aggregate")
-        
+
         // 예외가 발생하지 않아야 함
         eventBus.publish(event)
         assertTrue(true)
@@ -123,13 +124,13 @@ class EventBusSimpleTest {
         val eventBus = TestEventBusImpl()
         val handler1 = TestEventHandler()
         val handler2 = TestEventHandler()
-        
+
         eventBus.registerHandler(TestEvent::class.java, handler1)
         eventBus.registerHandler(TestEvent::class.java, handler2)
-        
+
         val event = TestEvent("test-aggregate")
         eventBus.publish(event)
-        
+
         assertEquals(1, handler1.processedCount.get())
         assertEquals(1, handler2.processedCount.get())
     }
